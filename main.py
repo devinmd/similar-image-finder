@@ -15,7 +15,13 @@ class window(QWidget):
     def __init__(self, parent=None):
         super(window, self).__init__(parent)
         self.setWindowTitle("Similar and Duplicate Image Finder")
-        self.resize(1600, 1200)
+        try:
+            if platform.system() == 'Darwin':       # macOS
+                self.resize(800, 500)
+            elif platform.system() == 'Windows':    # Windows
+                self.resize(1600, 1200)
+        except:
+            print('error')
 
         self.image_width = 128
         self.image_height = 128
@@ -195,10 +201,11 @@ class window(QWidget):
     def deleteFile(self, path):
         try:
             path = path.replace('/', '\\')
+            print(path)
             send2trash(path)
             print('deleted', path)
-        except:
-            print('error')
+        except Exception as error:
+            print(error)
 
 
 def main():
