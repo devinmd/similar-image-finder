@@ -67,6 +67,12 @@ class window(QWidget):
             self.open_folder_in_file_explorer)
         self.layout_main.addWidget(self.button_open_folder)
 
+        # open selected folder
+        self.button_refresh = QPushButton(
+            "Refresh", self)
+        self.button_refresh.clicked.connect(self.refresh_files)
+        self.layout_main.addWidget(self.button_refresh)
+
         # Create a scroll area
         self.scroll_area = QScrollArea(self)
         self.scroll_area.setWidgetResizable(True)
@@ -104,8 +110,16 @@ class window(QWidget):
             self.current_folder_path = folder_path
             print(folder_path)
             similar_files = find_similar_images(folder_path, 8, 75)
+            similar_files = sorted(
+                similar_files, key=lambda x: x[0], reverse=True)
             self.label_folder_info.setText(folder_path)
             self.display_files(similar_files, folder_path)
+
+    def refresh_files(self):
+        similar_files = find_similar_images(self.current_folder_path, 8, 75)
+        similar_files = sorted(similar_files, key=lambda x: x[0], reverse=True)
+        self.label_folder_info.setText(self.current_folder_path)
+        self.display_files(similar_files, self.current_folder_path)
 
     def list_files(self, folder_path):
         file_paths = []
@@ -139,55 +153,56 @@ class window(QWidget):
 
         for index, file_info in enumerate(files):
 
-            # Create a container widget
+            # Create a container widget for each row
             container_widget = QWidget()
+            # layout for each row
             container_layout = QHBoxLayout(container_widget)
             container_layout.setContentsMargins(0, 0, 0, 0)
 
-            # Image label
-            image1_label = QLabel()
-            image2_label = QLabel()
-            # Set fixed size for image label
-            image1_label.setFixedSize(
-                self.image_width, self.image_height)
-            image2_label.setFixedSize(
-                self.image_width, self.image_height)
-            image1_label.setStyleSheet("border: 1px solid black;")
-            image2_label.setStyleSheet("border: 1px solid black;")
-            pixmap1 = QPixmap(file_info[0])
-            pixmap2 = QPixmap(file_info[1])
-            if not pixmap1.isNull():
-                pixmap1 = pixmap1.scaled(
-                    self.image_width, self.image_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                image1_label.setPixmap(pixmap1)
-                image1_label.mouseDoubleClickEvent = lambda event, path=file_info[0]: self.open_file_in_default_app(
-                    path)
-            else:
-                print('error getting pixmap for image1')
-            if not pixmap2.isNull():
-                pixmap2 = pixmap2.scaled(
-                    self.image_width, self.image_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-                image2_label.setPixmap(pixmap2)
-                image2_label.mouseDoubleClickEvent = lambda event, path=file_info[1]: self.open_file_in_default_app(
-                    path)
-            else:
-                print('error getting pixmap for image2')
-
             # percentage label
-            label_percentage = QLabel(str(file_info[2]) + "%")
-
+            label_percentage = QLabel(str(file_info[0]) + "%")
             container_layout.addWidget(
                 label_percentage, alignment=Qt.AlignCenter)
-            # display images
-            container_layout.addWidget(
-                image1_label, alignment=Qt.AlignCenter)
-            container_layout.addWidget(
-                image2_label, alignment=Qt.AlignCenter)
+            # image 1
+
+            # for each image
+            for i in range(2):
+
+                widget_image_container = QWidget()
+
+                layout_image_container = QVBoxLayout(widget_image_container)
+
+                label_image_image = QLabel()
+                label_image_image.setFixedSize(
+                    self.image_width, self.image_height)
+                label_image_image.setStyleSheet("border: 1px solid black;")
+                pixmap = QPixmap(file_info[i+1])
+                if not pixmap.isNull():
+                    pixmap = pixmap.scaled(
+                        self.image_width, self.image_height, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                    label_image_image.setPixmap(pixmap)
+                    label_image_image.mouseDoubleClickEvent = lambda event, path=file_info[i+1]: self.open_file_in_default_app(
+                        path)
+                else:
+                    print('error getting pixmap for image')
+                label_image_filename = QLabel(os.path.basename(file_info[i+1]))
+                label_image_size = QLabel(
+                    self.format_bytes(os.path.getsize(file_info[i+1])))
+                label_image_size.setFixedHeight(16)
+
+                layout_image_container.addWidget(label_image_image)
+                layout_image_container.addWidget(label_image_filename)
+                layout_image_container.addWidget(label_image_size)
+
+                container_layout.addWidget(widget_image_container)
 
             # delete button
             button_delete_file = QPushButton("Delete copy", self)
+            button_delete_file.setFixedWidth(128)
             button_delete_file.clicked.connect(
-                lambda checked, index=index: self.deleteFile(files[index][1]))
+                lambda checked, index=index: self.deleteFile(files[index][2])
+            )
+
             container_layout.addWidget(button_delete_file)
 
             # Add container widget to the scroll layout
@@ -206,6 +221,14 @@ class window(QWidget):
             print('deleted', path)
         except Exception as error:
             print(error)
+
+    def format_bytes(self, size, decimal_places=2):
+
+        for unit in ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB']:
+            if abs(size) < 1024.0:
+                return f"{size:.{decimal_places}f} {unit}"
+            size /= 1024.0
+        return f"{size:.{decimal_places}f} YB"  # If size is too large
 
 
 def main():

@@ -5,8 +5,6 @@ made with python and pyqt5
 finds similar image file pairs using phash
 
 ### todo
-- sort file list
-- file size 
 - dark mode
 - remove file from list if user deletes it
 - user input percentage threshold
@@ -17,3 +15,4 @@ finds similar image file pairs using phash
 - test on mac
 - bulk delete / delete all
 - compare hashes faster
+- passive caching (cache files and compare in background to constantly search for similar files and alert user)

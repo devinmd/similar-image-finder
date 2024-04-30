@@ -3,4 +3,4 @@
 __pycache__/*
 
 # cache of image phashes
-phash_cache.pkl
+cache/*

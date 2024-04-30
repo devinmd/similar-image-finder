@@ -29,7 +29,7 @@ def get_phash(dirname, image, hash_size):
     return (hash)
 
 
-CACHE_FILE = "phash_cache.pkl"
+CACHE_FILE = "cache/phash_cache.pkl"
 
 
 def load_cache():
@@ -73,7 +73,7 @@ def find_similar_images(dirname, hash_size, threshold):
             similarity = similarity_percentage(hash1, hash2)
             if (similarity > threshold):
                 print(str(similarity)+"% -", img1, "&", img2)
-                results.append([img1, img2, similarity])
+                results.append([similarity,img1, img2])
 
     print(str(len(hashes)) + " files or " + str(combinations(len(hashes)))+" combinations checked in " +
           str(time.time()-start) + " seconds")
